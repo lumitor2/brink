@@ -2,6 +2,7 @@ import type { MeetingEvent, AppConfig } from '../shared/types'
 import { getAuthorizedClient } from './auth'
 import { getConfig } from './store'
 import { extractJoinLink, type CalendarEvent } from './links'
+import { finishedMeetings } from '../shared/meetings'
 
 /** How far ahead the upcoming list / reminders look. */
 const HORIZON_DAYS = 7
@@ -68,6 +69,5 @@ export async function fetchEarlierTodayMeetings(): Promise<MeetingEvent[]> {
   const midnight = new Date(now)
   midnight.setHours(0, 0, 0, 0)
   const all = await fetchWindow(midnight.toISOString(), now.toISOString(), cfg)
-  const nowMs = Date.now()
-  return all.filter((m) => new Date(m.end).getTime() <= nowMs)
+  return finishedMeetings(all, Date.now())
 }

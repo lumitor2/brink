@@ -162,12 +162,27 @@ function buildTrayMenu(): void {
       })
     }
 
-    const joinTarget = current ?? next
-    if (joinTarget) {
-      items.push({
-        label: t('menu.join'),
-        click: () => openExternalSafe(joinTarget.joinUrl)
-      })
+    // Join buttons: when a meeting is in progress *and* another is coming up,
+    // offer both (named so they're distinguishable); otherwise a single button.
+    if (current && next) {
+      items.push(
+        {
+          label: t('menu.joinNamed', { title: shortTitle(current.title, 24) }),
+          click: () => openExternalSafe(current.joinUrl)
+        },
+        {
+          label: t('menu.joinNamed', { title: shortTitle(next.title, 24) }),
+          click: () => openExternalSafe(next.joinUrl)
+        }
+      )
+    } else {
+      const joinTarget = current ?? next
+      if (joinTarget) {
+        items.push({
+          label: t('menu.join'),
+          click: () => openExternalSafe(joinTarget.joinUrl)
+        })
+      }
     }
 
     items.push(
@@ -313,6 +328,12 @@ function registerIpc(): void {
     'overlay:action',
     guardedOn((action) => handleOverlayAction(action as OverlayAction))
   )
+  // Renderer signals it's mounted → push the payload (reliable handshake, no
+  // race with the fixed-delay push above).
+  ipcMain.on(
+    'overlay:ready',
+    guardedOn(() => pushPayloadToOverlay())
+  )
 
   ipcMain.handle(
     'banner:test',
@@ -324,6 +345,10 @@ function registerIpc(): void {
   ipcMain.on(
     'banner:action',
     guardedOn((action) => handleBannerAction(action as BannerAction))
+  )
+  ipcMain.on(
+    'banner:ready',
+    guardedOn(() => pushPayloadToBanner())
   )
 }
 

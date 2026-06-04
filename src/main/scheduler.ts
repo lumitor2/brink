@@ -10,6 +10,8 @@ import {
   onBannerAction,
   pushPayloadToBanner
 } from './banner'
+import { currentMeeting, nextMeeting } from '../shared/meetings'
+import { isAuthError } from '../shared/authErrors'
 
 const SYNC_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
 const TICK_INTERVAL_MS = 1000 // 1 second
@@ -37,30 +39,18 @@ export function setAuthInvalidListener(cb: () => void): void {
   onAuthInvalid = cb
 }
 
-/** True for the family of errors that mean "the refresh token is no good". */
-function isAuthError(err: unknown): boolean {
-  const e = err as { response?: { data?: { error?: string }; status?: number }; message?: string }
-  const code = e?.response?.data?.error
-  return code === 'invalid_grant' || code === 'invalid_client' || e?.response?.status === 401
-}
-
 export function getMeetings(): MeetingEvent[] {
   return meetings
 }
 
 /** The meeting currently in progress (started, not yet ended), if any. */
 export function getCurrentMeeting(): MeetingEvent | null {
-  const now = Date.now()
-  return (
-    meetings.find((m) => new Date(m.start).getTime() <= now && now < new Date(m.end).getTime()) ??
-    null
-  )
+  return currentMeeting(meetings, Date.now())
 }
 
 /** The next meeting that hasn't started yet, if any. */
 export function getNextMeeting(): MeetingEvent | null {
-  const now = Date.now()
-  return meetings.find((m) => new Date(m.start).getTime() > now) ?? null
+  return nextMeeting(meetings, Date.now())
 }
 
 export async function syncNow(): Promise<MeetingEvent[]> {

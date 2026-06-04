@@ -28,6 +28,7 @@ const cs = {
   'tray.nextAfter': 'Pak: {title} ({time})',
   // tray menu
   'menu.join': 'Připojit se ke schůzce',
+  'menu.joinNamed': 'Připojit se: {title}',
   'menu.signedInAs': 'Přihlášeno: {email}',
   'menu.signIn': 'Přihlásit Google…',
   'menu.syncNow': 'Synchronizovat teď',
@@ -91,6 +92,7 @@ const en: Record<keyof typeof cs, string> = {
   'tray.notSignedIn': 'Not signed in',
   'tray.nextAfter': 'Then: {title} ({time})',
   'menu.join': 'Join meeting',
+  'menu.joinNamed': 'Join: {title}',
   'menu.signedInAs': 'Signed in: {email}',
   'menu.signIn': 'Sign in with Google…',
   'menu.syncNow': 'Sync now',

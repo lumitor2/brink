@@ -12,6 +12,7 @@ export function Banner(): JSX.Element {
 
   useEffect(() => {
     const off = window.api.onBanner(setPayload)
+    window.api.bannerReady() // request the payload now that we're listening
     return off
   }, [])
 

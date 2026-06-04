@@ -12,6 +12,7 @@ export function Overlay(): JSX.Element {
 
   useEffect(() => {
     const off = window.api.onOverlay(setPayload)
+    window.api.overlayReady() // request the payload now that we're listening
     return off
   }, [])
 

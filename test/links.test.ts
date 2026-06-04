@@ -58,4 +58,28 @@ describe('extractJoinLink', () => {
     expect(extractJoinLink({ summary: 'Lunch', location: 'Kitchen' })).toBeNull()
     expect(extractJoinLink({})).toBeNull()
   })
+
+  // Security regression: an event comes from a (possibly hostile) invite. Only
+  // https links may ever be surfaced as joinable — never file:, smb:, custom
+  // schemes, or plain http — so we never hand a dangerous URL to the OS opener.
+  it('rejects a non-https hangoutLink', () => {
+    expect(extractJoinLink({ hangoutLink: 'file:///etc/passwd' })).toBeNull()
+    expect(extractJoinLink({ hangoutLink: 'smb://attacker/share' })).toBeNull()
+    expect(extractJoinLink({ hangoutLink: 'http://meet.google.com/x' })).toBeNull()
+  })
+
+  it('rejects a non-https conferenceData entry point', () => {
+    expect(
+      extractJoinLink({
+        conferenceData: {
+          conferenceSolution: { name: 'Evil' },
+          entryPoints: [{ entryPointType: 'video', uri: 'javascript:alert(1)' }]
+        }
+      })
+    ).toBeNull()
+  })
+
+  it('only matches https provider URLs in free text, not http', () => {
+    expect(extractJoinLink({ description: 'http://acme.zoom.us/j/1' })).toBeNull()
+  })
 })

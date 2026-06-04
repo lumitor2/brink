@@ -79,10 +79,14 @@ export interface RendererApi {
   // --- overlay window ---
   onOverlay(cb: (payload: OverlayPayload) => void): () => void
   overlayAction(action: OverlayAction): void
+  /** Tell main the overlay renderer is mounted and ready for its payload. */
+  overlayReady(): void
 
   // --- pre-reminder banner window ---
   onBanner(cb: (payload: OverlayPayload) => void): () => void
   bannerAction(action: BannerAction): void
+  /** Tell main the banner renderer is mounted and ready for its payload. */
+  bannerReady(): void
 
   /** Which view this window should render. */
   view: 'settings' | 'overlay' | 'banner'

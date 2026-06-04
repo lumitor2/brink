@@ -45,6 +45,7 @@ const api: RendererApi = {
   },
 
   overlayAction: (action: OverlayAction) => ipcRenderer.send('overlay:action', action),
+  overlayReady: () => ipcRenderer.send('overlay:ready'),
 
   onBanner: (cb: (payload: OverlayPayload) => void) => {
     const listener = (_e: unknown, payload: OverlayPayload): void => cb(payload)
@@ -52,7 +53,8 @@ const api: RendererApi = {
     return () => ipcRenderer.removeListener('banner:event', listener)
   },
 
-  bannerAction: (action: BannerAction) => ipcRenderer.send('banner:action', action)
+  bannerAction: (action: BannerAction) => ipcRenderer.send('banner:action', action),
+  bannerReady: () => ipcRenderer.send('banner:ready')
 }
 
 contextBridge.exposeInMainWorld('api', api)

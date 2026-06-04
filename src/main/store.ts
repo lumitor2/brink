@@ -2,17 +2,7 @@ import { app, safeStorage } from 'electron'
 import { promises as fs } from 'fs'
 import { join, dirname } from 'path'
 import type { AppConfig } from '../shared/types'
-
-const DEFAULT_CONFIG: AppConfig = {
-  leadMinutes: 1,
-  snoozeMinutes: 1,
-  preReminderEnabled: true,
-  preReminderMinutes: 15,
-  includeDeclined: false,
-  language: 'auto',
-  clientId: '',
-  clientSecret: ''
-}
+import { DEFAULT_CONFIG, sanitizeConfig } from '../shared/config'
 
 function configPath(): string {
   return join(app.getPath('userData'), 'config.json')
@@ -59,32 +49,12 @@ export async function migrateLegacyUserData(): Promise<void> {
   }
 }
 
-function clampInt(n: unknown, min: number, max: number, fallback: number): number {
-  const v = Math.round(Number(n))
-  return Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : fallback
-}
-
-/** Coerce/clamp config to known shapes and ranges — the renderer can send any
- *  Partial<AppConfig>, so never trust it blindly. */
-function sanitize(c: AppConfig): AppConfig {
-  return {
-    leadMinutes: clampInt(c.leadMinutes, 0, 1440, DEFAULT_CONFIG.leadMinutes),
-    snoozeMinutes: clampInt(c.snoozeMinutes, 1, 1440, DEFAULT_CONFIG.snoozeMinutes),
-    preReminderEnabled: Boolean(c.preReminderEnabled),
-    preReminderMinutes: clampInt(c.preReminderMinutes, 1, 10080, DEFAULT_CONFIG.preReminderMinutes),
-    includeDeclined: Boolean(c.includeDeclined),
-    language: c.language === 'cs' || c.language === 'en' ? c.language : 'auto',
-    clientId: String(c.clientId ?? '').slice(0, 512),
-    clientSecret: String(c.clientSecret ?? '').slice(0, 512)
-  }
-}
-
 export async function getConfig(): Promise<AppConfig> {
   if (cached) return cached
   let next: AppConfig
   try {
     const raw = await fs.readFile(configPath(), 'utf8')
-    next = sanitize({ ...DEFAULT_CONFIG, ...JSON.parse(raw) })
+    next = sanitizeConfig({ ...DEFAULT_CONFIG, ...JSON.parse(raw) })
   } catch {
     next = { ...DEFAULT_CONFIG }
   }
@@ -94,7 +64,7 @@ export async function getConfig(): Promise<AppConfig> {
 
 export async function saveConfig(patch: Partial<AppConfig>): Promise<AppConfig> {
   const current = await getConfig()
-  cached = sanitize({ ...current, ...patch })
+  cached = sanitizeConfig({ ...current, ...patch })
   await fs.writeFile(configPath(), JSON.stringify(cached, null, 2), {
     encoding: 'utf8',
     mode: 0o600
