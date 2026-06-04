@@ -17,3 +17,16 @@ export function nextMeeting(meetings: MeetingEvent[], now: number): MeetingEvent
 export function finishedMeetings(meetings: MeetingEvent[], now: number): MeetingEvent[] {
   return meetings.filter((m) => new Date(m.end).getTime() <= now)
 }
+
+/**
+ * Whole calendar days between `now` and `then` (local time): 0 = same day,
+ * 1 = tomorrow, etc. Compares midnights, so 23:00→01:00 counts as 1 day.
+ */
+export function calendarDayOffset(now: number, then: number): number {
+  const midnight = (ms: number): number => {
+    const d = new Date(ms)
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+  }
+  return Math.round((midnight(then) - midnight(now)) / 86_400_000)
+}

@@ -18,6 +18,7 @@ import { handleBannerAction, showBanner, pushPayloadToBanner } from './banner'
 import { buildTrayIcon } from './trayIcon'
 import { applySecurityHardening, openExternalSafe } from './security'
 import { formatRemaining } from '../shared/format'
+import { calendarDayOffset } from '../shared/meetings'
 import { effectiveLang, createT, type Lang, type Translate } from '../shared/i18n'
 
 const isDev = !!process.env['ELECTRON_RENDERER_URL']
@@ -128,8 +129,23 @@ function updateTrayTitle(): void {
     tray.setTitle('')
     return
   }
-  const ms = new Date(next.start).getTime() - Date.now()
-  const timeStr = ms <= 0 ? t('title.now') : t('title.in', { time: formatRemaining(ms) })
+  const now = Date.now()
+  const startMs = new Date(next.start).getTime()
+  const dayOffset = calendarDayOffset(now, startMs)
+  let timeStr: string
+  if (startMs <= now) {
+    timeStr = t('title.now')
+  } else if (dayOffset === 0) {
+    // Today: live countdown.
+    timeStr = t('title.in', { time: formatRemaining(startMs - now) })
+  } else if (dayOffset === 1) {
+    // Tomorrow: show the clock time instead of a huge countdown.
+    timeStr = t('title.tomorrow', { time: hhmm(next.start) })
+  } else {
+    // Further out: weekday + clock time, e.g. "Mon 09:00".
+    const day = new Date(next.start).toLocaleDateString(localeTag(), { weekday: 'short' })
+    timeStr = t('title.onDay', { day, time: hhmm(next.start) })
+  }
   tray.setTitle(` ${timeStr} · ${shortTitle(next.title)}`)
 }
 
