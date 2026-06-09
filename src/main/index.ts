@@ -23,6 +23,15 @@ import { effectiveLang, createT, type Lang, type Translate } from '../shared/i18
 
 const isDev = !!process.env['ELECTRON_RENDERER_URL']
 
+// Last-resort logging so a stray rejection/exception in the main process is
+// visible instead of silently taking the app down.
+process.on('unhandledRejection', (reason) => {
+  console.error('[brink] unhandledRejection:', reason instanceof Error ? reason.stack : reason)
+})
+process.on('uncaughtException', (err) => {
+  console.error('[brink] uncaughtException:', err instanceof Error ? err.stack : err)
+})
+
 let tray: Tray | null = null
 let settingsWindow: BrowserWindow | null = null
 let titleTimer: NodeJS.Timeout | null = null
